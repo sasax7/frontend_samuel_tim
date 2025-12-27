@@ -1,8 +1,9 @@
-import { content } from '../content';
+import { Link } from "react-router-dom";
+import { content } from "../content";
 
 export default function Footer() {
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -19,13 +20,13 @@ export default function Footer() {
           <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-8">
             <div className="flex space-x-6">
               {content.nav.links.map((link) => (
-                <a
+                <Link
                   key={link.href}
-                  href={link.href}
+                  to={link.href}
                   className="text-gray-300 hover:text-white transition-colors"
                 >
                   {link.label}
-                </a>
+                </Link>
               ))}
             </div>
 
@@ -53,7 +54,7 @@ export default function Footer() {
         {/* Social Links */}
         <div className="mt-8 pt-8 border-t border-gray-700">
           <div className="flex justify-center space-x-6">
-            {content.contact.social.map((social) => (
+            {content.social.map((social) => (
               <a
                 key={social.name}
                 href={social.url}
