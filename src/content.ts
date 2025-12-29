@@ -59,6 +59,8 @@ export const content = {
     subtitle: "Bachelor Thesis · 2025",
     description:
       "The thesis investigates how unsupervised models can surface anomalies across hundreds of industrial sensors before downtime occurs.",
+    // Served from our own host (public/report.pdf) and kept up to date via the sync script.
+    pdfUrl: "/report.pdf",
     highlights: [
       "Curated and synchronized 120M+ telemetry points from OPC-UA streams into a reproducible preprocessing pipeline.",
       "Benchmarked statistical baselines against deep autoencoders and isolation forests with custom evaluation metrics tied to maintenance KPIs.",

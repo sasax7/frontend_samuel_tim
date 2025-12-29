@@ -1,7 +1,32 @@
+import { useCallback } from "react";
 import { content } from "../content";
-import bachelorPdf from "../assets/bachelor.pdf";
 
 export default function AnomalyDetection() {
+  const pdfUrl = content.anomalyDetection.pdfUrl;
+  const pdfEmbedUrl = `${pdfUrl}#view=FitH`;
+
+  const handleDownload = useCallback(async () => {
+    try {
+      const response = await fetch(pdfUrl, { mode: "cors" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = objectUrl;
+      a.download = "report.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
+      URL.revokeObjectURL(objectUrl);
+    } catch {
+      // Fallback: open the PDF URL. Browser behavior depends on headers.
+      window.open(pdfUrl, "_blank", "noopener,noreferrer");
+    }
+  }, [pdfUrl]);
+
   return (
     <section id="anomaly-detection" className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -32,43 +57,51 @@ export default function AnomalyDetection() {
 
             <div className="mt-10 flex flex-wrap gap-4">
               <a
-                href={bachelorPdf}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="#pdf-preview"
                 className="px-8 py-4 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600 transition-all transform hover:scale-105 shadow-lg"
               >
-                Open PDF
+                View PDF
               </a>
-              <a
-                href={bachelorPdf}
-                download
+              <button
+                type="button"
+                onClick={handleDownload}
                 className="px-8 py-4 rounded-lg font-semibold border-2 border-blue-600 text-blue-600 bg-white hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600 transition-all transform hover:scale-105 shadow-lg"
               >
-                Download Thesis
+                Download PDF
+              </button>
+              <a
+                href={pdfUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-8 py-4 rounded-lg font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600 transition-all"
+              >
+                Open in New Tab
               </a>
             </div>
           </div>
 
-          <div className="bg-white rounded-3xl shadow-2xl p-4">
-            <object
-              data={`${bachelorPdf}#view=FitH`}
-              type="application/pdf"
+          <div
+            id="pdf-preview"
+            className="bg-white rounded-3xl shadow-2xl p-4 scroll-mt-24"
+          >
+            <iframe
+              src={pdfEmbedUrl}
+              title="Bachelor thesis PDF preview"
               className="w-full h-[720px] rounded-2xl"
-              aria-label="Bachelor thesis PDF preview"
-            >
-              <p className="text-gray-600">
-                This browser cannot display embedded PDFs.{" "}
-                <a
-                  href={bachelorPdf}
-                  className="text-primary underline"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  Open the document in a new tab
-                </a>
-                .
-              </p>
-            </object>
+            />
+
+            <p className="text-gray-600 mt-4">
+              If the PDF preview is blocked by your browser, use{" "}
+              <a
+                href={pdfUrl}
+                className="text-primary underline"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Open in New Tab
+              </a>
+              .
+            </p>
           </div>
         </div>
       </div>
