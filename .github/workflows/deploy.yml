@@ -1,14 +1,40 @@
-name: Build and Deploy Portfolio
+name: Sync Thesis & Deploy Portfolio
 
 on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 3 * * *" # Täglich um 03:17 Uhr
   push:
     branches: [ main ]
 
 jobs:
-  build-and-push:
+  sync-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Sync PDF
+        # Dieser Befehl muss in deinem package.json definiert sein
+        run: npm run sync:pdf 
+
+      - name: Commit PDF (Optional)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/report.pdf || echo "No PDF found"
+          git diff --quiet && git diff --staged --quiet || git commit -m "chore: sync thesis PDF"
+          # Wir pushen nicht sofort, damit der Build das PDF im Image hat
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -16,18 +42,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and push
+      - name: Build and push Docker Image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          # Nutze hier einen Namen wie deinuser/samueltim-portfolio:latest
           tags: ${{ secrets.DOCKER_USERNAME }}/samueltim-portfolio:latest
 
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    steps:
       - name: Deploy to K3s via SSH
         uses: appleboy/ssh-action@master
         with:
@@ -35,6 +56,10 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Update das Image im Cluster (Neuer Deployment Name!)
+            # Falls das Deployment noch nicht existiert, wird es hier beim ersten Mal Fehler werfen
+            # Sicherstellen, dass der Name 'samueltim-frontend' passt
             kubectl set image deployment/samueltim-frontend frontend=${{ secrets.DOCKER_USERNAME }}/samueltim-portfolio:latest -n tradingapp
             kubectl rollout status deployment/samueltim-frontend -n tradingapp
+
+      - name: Push changes to Repo
+        run: git push || echo "Nothing to push"
