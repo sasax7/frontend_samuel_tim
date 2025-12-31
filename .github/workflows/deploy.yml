@@ -25,7 +25,6 @@ jobs:
         run: npm ci
 
       - name: Sync PDF
-        # Dieser Befehl muss in deinem package.json definiert sein
         run: npm run sync:pdf 
 
       - name: Commit PDF (Optional)
@@ -34,7 +33,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add public/report.pdf || echo "No PDF found"
           git diff --quiet && git diff --staged --quiet || git commit -m "chore: sync thesis PDF"
-          # Wir pushen nicht sofort, damit der Build das PDF im Image hat
 
       - name: Login to Docker Hub
         uses: docker/login-action@v3
@@ -56,8 +54,11 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            # Falls das Deployment noch nicht existiert, wird es hier beim ersten Mal Fehler werfen
-            # Sicherstellen, dass der Name 'samueltim-frontend' passt
+            # Setze den Pfad zur Kubeconfig explizit
+            export KUBECONFIG=/home/sti/.kube/config
+            
+            # Deployment Image aktualisieren
+            # Hinweis: Wir nutzen hier 'frontend' als Container-Namen, da dies der Standard ist.
             kubectl set image deployment/samueltim-frontend frontend=${{ secrets.DOCKER_USERNAME }}/samueltim-portfolio:latest -n tradingapp
             kubectl rollout status deployment/samueltim-frontend -n tradingapp
 
