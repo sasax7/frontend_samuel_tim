@@ -1,12 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type {
-  Expense,
-  FinanceCategory,
-  Income,
-  NetWorthSnapshot,
-  YearMonth,
-} from "@/features/finance/types";
+import type { Expense, FinanceCategory, Income, NetWorthSnapshot, NetWorthSnapshotV2, RecurringBill, YearMonth } from "@/features/finance/types";
+import type { FinanceStoreData } from "@/features/finance/store";
 import { getActiveFinanceStore } from "@/features/finance/activeStore";
 import { getAccessToken } from "@/features/auth/session";
 import { FinanceSankeyECharts } from "@/components/FinanceSankeyECharts";
@@ -48,6 +43,79 @@ function dateForMonthDueDay(month: YearMonth, dueDay: number): `${number}-${numb
   return `${yStr}-${mStr}-${dd}` as `${number}-${number}-${number}`;
 }
 
+const MOCK_FINANCE_DATA: FinanceStoreData = {
+  version: 1,
+  currency: "EUR",
+  categories: [
+    { id: "cat_food", name: "Lebensmittel" },
+    { id: "cat_home", name: "Miete" },
+    { id: "cat_fun", name: "Freizeit" },
+    { id: "cat_misc", name: "Sonstiges" },
+  ],
+  expenses: [
+    { id: "exp1", name: "Wocheneinkauf", categoryId: "cat_food", date: "2025-12-12", amount: { amount: 180, currency: "EUR" } },
+    { id: "exp2", name: "Restaurant", categoryId: "cat_food", date: "2025-12-05", amount: { amount: 90, currency: "EUR" } },
+    { id: "exp3", name: "Kino", categoryId: "cat_fun", date: "2025-12-10", amount: { amount: 45, currency: "EUR" } },
+  ],
+  incomes: [
+    { id: "inc1", name: "Gehalt", date: "2025-12-01", amount: { amount: 3180, currency: "EUR" } },
+    { id: "inc2", name: "Freelance", date: "2025-12-15", amount: { amount: 420, currency: "EUR" } },
+  ],
+  recurringBills: [
+    {
+      id: "bill_rent",
+      name: "Miete",
+      categoryId: "cat_home",
+      startMonth: "2025-01",
+      dueDay: 1,
+      active: true,
+      amountHistory: [{ effectiveMonth: "2025-01", amount: { amount: 950, currency: "EUR" } }],
+    } as RecurringBill,
+  ],
+  netWorth: [
+    {
+      id: "nw_2025-11",
+      month: "2025-11",
+      groups: [
+        {
+          id: "liquid",
+          name: "Liquid",
+          lines: [
+            { id: "nw_line_1", name: "Giro", amount: { amount: 5200, currency: "EUR" } },
+            { id: "nw_line_2", name: "Tagesgeld", amount: { amount: 3200, currency: "EUR" } },
+          ],
+        },
+        {
+          id: "investment",
+          name: "Investments",
+          lines: [{ id: "nw_line_3", name: "ETF", amount: { amount: 10800, currency: "EUR" } }],
+        },
+        { id: "material", name: "Sachwerte", lines: [] },
+      ],
+    } as NetWorthSnapshotV2,
+    {
+      id: "nw_2025-12",
+      month: "2025-12",
+      groups: [
+        {
+          id: "liquid",
+          name: "Liquid",
+          lines: [
+            { id: "nw_line_1b", name: "Giro", amount: { amount: 5800, currency: "EUR" } },
+            { id: "nw_line_2b", name: "Tagesgeld", amount: { amount: 3300, currency: "EUR" } },
+          ],
+        },
+        {
+          id: "investment",
+          name: "Investments",
+          lines: [{ id: "nw_line_3b", name: "ETF", amount: { amount: 11250, currency: "EUR" } }],
+        },
+        { id: "material", name: "Sachwerte", lines: [] },
+      ],
+    } as NetWorthSnapshotV2,
+  ],
+};
+
 export default function FinanceVizPage() {
   const token = getAccessToken();
   const store = useMemo(() => getActiveFinanceStore(token ?? undefined), [token]);
@@ -71,9 +139,18 @@ export default function FinanceVizPage() {
       .get()
       .then((d) => {
         if (!mounted) return;
+        if (!d || d.expenses.length === 0) {
+          setError("Keine Finanzdaten gefunden – zeige Demo.");
+          setData(MOCK_FINANCE_DATA);
+          return;
+        }
         setData(d);
       })
-      .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+      .catch((e: unknown) => {
+        if (!mounted) return;
+        setError(e instanceof Error ? e.message : String(e));
+        setData(MOCK_FINANCE_DATA);
+      });
     return () => {
       mounted = false;
     };
@@ -167,6 +244,7 @@ export default function FinanceVizPage() {
   const expensesTotal = useMemo(() => sumBy(expensesForMonth, (e) => e.amount.amount), [expensesForMonth]);
   const billsTotal = useMemo(() => sumBy(projectedBillsForMonth, (b) => b.amount), [projectedBillsForMonth]);
   const spendingTotal = useMemo(() => expensesTotal + billsTotal, [expensesTotal, billsTotal]);
+  const profitTotal = useMemo(() => incomeTotal - spendingTotal, [incomeTotal, spendingTotal]);
 
   const expensesTotalYear = useMemo(() => sumBy(expensesForYear, (e) => e.amount.amount), [expensesForYear]);
   const billsTotalYear = useMemo(() => sumBy(projectedBillsForYear, (b) => b.amount), [projectedBillsForYear]);
@@ -296,6 +374,22 @@ export default function FinanceVizPage() {
     return netWorthSeries[netWorthSeries.length - 1];
   }, [netWorthSeries]);
 
+  const netWorthChange = useMemo(() => {
+    if (netWorthSeries.length < 2) return null;
+    const latest = netWorthSeries[netWorthSeries.length - 1];
+    const prev = netWorthSeries[netWorthSeries.length - 2];
+    return {
+      latest,
+      prev,
+      delta: latest.total - prev.total,
+    };
+  }, [netWorthSeries]);
+
+  const netWorthVsProfit = useMemo(() => {
+    if (!netWorthChange) return null;
+    return netWorthChange.delta - profitTotal;
+  }, [netWorthChange, profitTotal]);
+
 
   if (!data) {
     return (
@@ -359,7 +453,7 @@ export default function FinanceVizPage() {
               <CardTitle>Monatliche Übersicht</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-3">
                 <div className="rounded-xl border bg-white p-4">
                   <div className="text-xs text-gray-600">Einnahmen in {selectedMonth}</div>
                   <div className="text-lg font-semibold text-gray-900">{formatMoney(incomeTotal, currency)}</div>
@@ -368,7 +462,44 @@ export default function FinanceVizPage() {
                   <div className="text-xs text-gray-600">Ausgaben (inkl. Fixkosten) in {selectedMonth}</div>
                   <div className="text-lg font-semibold text-gray-900">{formatMoney(spendingTotal, currency)}</div>
                 </div>
+                <div className="rounded-xl border bg-white p-4">
+                  <div className="text-xs text-gray-600">Gewinn / Cashflow ({selectedMonth})</div>
+                  <div
+                    className={`text-lg font-semibold ${profitTotal >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                  >
+                    {formatMoney(profitTotal, currency)}
+                  </div>
+                  <p className="text-xs text-gray-600">Einnahmen minus Ausgaben</p>
+                </div>
               </div>
+
+              {netWorthChange ? (
+                <div className="mt-4 rounded-xl border bg-white p-4">
+                  <div className="text-xs text-gray-600">
+                    Vermögensveränderung {netWorthChange.prev.month} → {netWorthChange.latest.month}
+                  </div>
+                  <div
+                    className={`text-lg font-semibold ${netWorthChange.delta >= 0 ? "text-emerald-600" : "text-rose-600"}`}
+                  >
+                    {formatMoney(netWorthChange.delta, currency)}
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {(() => {
+                      if (netWorthVsProfit === null) return null;
+                      const diffAbs = Math.abs(netWorthVsProfit);
+                      if (diffAbs < 1) {
+                        return "Der Vermögenssprung deckt sich nahezu mit dem ausgewiesenen Gewinn.";
+                      }
+                      if (netWorthVsProfit > 0) {
+                        return `Vermögen stieg ${formatMoney(diffAbs, currency)} stärker als der Gewinn (z.B. Kursgewinne oder externe Zuflüsse).`;
+                      }
+                      return `Vermögen wuchs ${formatMoney(diffAbs, currency)} weniger als der Gewinn (mögliche Sonderausgaben oder offene Buchungen).`;
+                    })()}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500 mt-3">Noch keine Vermögensdaten zum Vergleichen vorhanden.</p>
+              )}
             </CardContent>
           </Card>
         </div>
