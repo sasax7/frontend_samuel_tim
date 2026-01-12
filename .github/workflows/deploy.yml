@@ -43,9 +43,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             export KUBECONFIG=/home/sti/.kube/config
-
-            # WICHTIG: Hier muss 'samueltim-frontend' statt 'frontend' stehen
+            # 1. Image setzen (wie bisher)
             kubectl set image deployment/samueltim-frontend samueltim-frontend=${{ secrets.DOCKER_USERNAME }}/samueltim-portfolio:latest -n tradingapp
-
-            # Rollout beobachten
+            
+            # 2. WICHTIG: Einen Neustart erzwingen, damit das Image neu gepullt wird
+            kubectl rollout restart deployment/samueltim-frontend -n tradingapp
+            
+            # 3. Rollout beobachten
             kubectl rollout status deployment/samueltim-frontend -n tradingapp
