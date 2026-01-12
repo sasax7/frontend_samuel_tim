@@ -66,6 +66,16 @@ export default function Footer() {
                 {social.name}
               </a>
             ))}
+
+            <span className="text-gray-600" aria-hidden="true">
+              ·
+            </span>
+            <Link
+              to="/impressum"
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              Impressum
+            </Link>
           </div>
         </div>
       </div>

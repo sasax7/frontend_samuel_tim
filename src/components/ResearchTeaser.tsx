@@ -8,7 +8,7 @@ export default function ResearchTeaser() {
         <div className="rounded-3xl bg-white/90 backdrop-blur shadow-2xl p-10 md:p-14 flex flex-col gap-8">
           <div>
             <p className="text-sm font-semibold tracking-[0.3em] uppercase text-primary mb-4">
-              Field Study
+              Bachelor Thesis
             </p>
             <h3 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
               {content.anomalyDetection.title}

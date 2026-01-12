@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import ScrollManager from "./components/ScrollManager";
 import HomePage from "./pages/HomePage";
 import AnomalyPage from "./pages/AnomalyPage";
+import ImpressumPage from "./pages/ImpressumPage";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/anomaly-detection" element={<AnomalyPage />} />
+              <Route path="/impressum" element={<ImpressumPage />} />
               <Route path="*" element={<HomePage />} />
             </Routes>
           </main>

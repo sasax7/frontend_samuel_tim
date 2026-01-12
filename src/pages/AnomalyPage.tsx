@@ -8,7 +8,8 @@ export default function AnomalyPage() {
           Thesis
         </p>
         <h1 className="text-4xl sm:text-5xl font-bold text-gray-900">
-          Full Thesis: Anomaly Detection for Industrial Assets
+          Towards Universal Probabilistic Foundation Models for Contextual
+          Energy Anomaly Detection
         </h1>
       </div>
       <AnomalyDetection />

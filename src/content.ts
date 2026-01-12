@@ -1,10 +1,11 @@
 export const content = {
   // SEO & Meta
   seo: {
-    title: "Samuel Tim | Anomaly Detection Thesis",
+    title: "Samuel Tim | Energy Anomaly Detection Thesis",
     description:
-      "Bachelor thesis focused on unsupervised anomaly detection for industrial telemetry. Read the paper and explore the research highlights.",
-    keywords: "anomaly detection, time-series, industrial IoT, bachelor thesis",
+      "Bachelor thesis on probabilistic foundation models for contextual energy anomaly detection, with root cause attribution and financial impact quantification.",
+    keywords:
+      "energy anomaly detection, contextual anomalies, probabilistic forecasting, time-series foundation models, root cause attribution, financial impact quantification, smart buildings, Eliona, BOPTEST",
     author: "Samuel Tim",
     siteUrl: "https://samueltim.com",
     image: "/og-image.jpg",
@@ -23,10 +24,10 @@ export const content = {
   // Hero Section
   hero: {
     greeting: "Bachelor Thesis",
-    name: "Anomaly Detection",
-    title: "Monitoring Industrial Assets in Real Time",
+    name: "Contextual Energy Anomaly Detection",
+    title: "Probabilistic Foundation Models",
     subtitle:
-      "Unsupervised learning techniques that surface anomalies in streaming sensor data before failures escalate.",
+      "Towards universal probabilistic foundation models for contextual energy anomaly detection with root cause attribution and financial impact quantification.",
     cta: {
       primary: { text: "Read The Thesis", href: "/anomaly-detection" },
       secondary: { text: "Research Context", href: "/#about" },
@@ -37,51 +38,49 @@ export const content = {
   about: {
     title: "About This Research",
     description:
-      "I spent the final year of my bachelor's program studying how industrial IoT data streams can be monitored with unsupervised anomaly detection models.",
+      "This thesis investigates how building-energy telemetry can be monitored with contextual, probabilistic anomaly detection that is deployable at portfolio scale and actionable for operations.",
     paragraphs: [
-      "The project bridges statistical signal processing with modern representation learning. I built repeatable pipelines that ingest raw OPC-UA telemetry, clean and align the signals, and feed them into deep autoencoders and tree-based models.",
-      "Beyond modeling, I focused on operationalizing the findings: packaging inference into lightweight services, validating alerts with domain experts, and translating the insights into actionable maintenance recommendations.",
+      "Many building automation systems rely on static rules or deterministic residual thresholds and struggle with non-stationarity, multimodality, and contextual regime changes. This work reframes anomaly detection as a distribution-aware, context-dependent modelling problem.",
+      "The core contributions combine probabilistic time-series modelling (including time-series foundation models) with distribution-aware scoring, signed financial impact estimates, and hierarchy-aware root cause attribution. The system is implemented and integrated into the Eliona smart building platform, backed by a domain-specific benchmark based on BOPTEST.",
     ],
     skills: [
-      "Python & PyTorch",
-      "Scikit-learn & Pandas",
-      "Time-Series Modeling",
-      "Autoencoders & Isolation Forest",
-      "Signal Processing",
-      "Edge Deployment",
-      "MLOps Fundamentals",
-      "Technical Writing",
+      "Probabilistic Forecasting",
+      "Time-Series Foundation Models",
+      "Mixture Density Networks",
+      "Distribution-Aware Scoring",
+      "Root Cause Attribution",
+      "Financial Impact Quantification",
+      "Python",
+      "Production System Integration",
     ],
   },
   // Anomaly Detection Section
   anomalyDetection: {
-    title: "Anomaly Detection",
+    title: "Contextual Energy Anomaly Detection",
     subtitle: "Bachelor Thesis · 2025",
     description:
-      "The thesis investigates how unsupervised models can surface anomalies across hundreds of industrial sensors before downtime occurs.",
-    // Served from our own host (public/report.pdf) and kept up to date via the sync script.
-    pdfUrl: "/report.pdf",
+      "A production-oriented framework for detecting contextual anomalies in multivariate building-energy time series using probabilistic models, with root cause attribution and conservative financial impact quantification.",
+    // Served directly from this site's /public directory.
+    pdfUrl: "/bachelor.pdf",
     highlights: [
-      "Curated and synchronized 120M+ telemetry points from OPC-UA streams into a reproducible preprocessing pipeline.",
-      "Benchmarked statistical baselines against deep autoencoders and isolation forests with custom evaluation metrics tied to maintenance KPIs.",
-      "Packaged the best-performing model into a lightweight inference service that production teams can deploy at the edge.",
+      "Formalizes contextual anomaly detection under non-stationarity and multimodality and critiques sequential forecasting-based detectors for sustained faults.",
+      "Implements distribution-aware anomaly scoring (e.g., quantile-based bounds and density/quantile severity) and translates deviations into signed, conservative monetary impact estimates.",
+      "Delivers an end-to-end, multi-tenant implementation integrated into the Eliona platform, including hierarchy-aware root cause attribution and a BOPTEST-based benchmark for realistic evaluation.",
     ],
   },
 
   // Social & Footer
   social: [
-    { name: "GitHub", url: "https://github.com/samueltim", icon: "github" },
+    { name: "GitHub", url: "https://github.com/sasax7", icon: "github" },
     {
       name: "LinkedIn",
-      url: "https://linkedin.com/in/samueltim",
+      url: "https://www.linkedin.com/in/samuel-tim-77b326387/",
       icon: "linkedin",
     },
-    { name: "Twitter", url: "https://twitter.com/samueltim", icon: "twitter" },
-    { name: "Email", url: "mailto:hello@samueltim.com", icon: "email" },
   ],
 
   footer: {
-    text: "Anomaly detection thesis built with React, TypeScript, and Tailwind CSS",
+    text: "Bachelor thesis on contextual energy anomaly detection built with React, TypeScript, and Tailwind CSS",
     copyright: `© ${new Date().getFullYear()} Samuel Tim. All rights reserved.`,
   },
 };

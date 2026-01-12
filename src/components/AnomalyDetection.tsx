@@ -4,27 +4,16 @@ import { content } from "../content";
 export default function AnomalyDetection() {
   const pdfUrl = content.anomalyDetection.pdfUrl;
   const pdfEmbedUrl = `${pdfUrl}#view=FitH`;
+  const pdfFilename = "bachelor.pdf";
 
-  const handleDownload = useCallback(async () => {
-    try {
-      const response = await fetch(pdfUrl, { mode: "cors" });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = objectUrl;
-      a.download = "report.pdf";
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-
-      URL.revokeObjectURL(objectUrl);
-    } catch {
-      // Fallback: open the PDF URL. Browser behavior depends on headers.
-      window.open(pdfUrl, "_blank", "noopener,noreferrer");
-    }
+  const handleDownload = useCallback(() => {
+    const a = document.createElement("a");
+    a.href = pdfUrl;
+    a.download = pdfFilename;
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   }, [pdfUrl]);
 
   return (
