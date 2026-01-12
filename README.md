@@ -113,6 +113,20 @@ Preview the production build:
 npm run preview
 ```
 
+### Backend API konfigurieren
+
+Das Frontend erwartet eine Build-Variable `VITE_BACKEND_URL`, die auf den öffentlich
+erreichbaren Backend-Endpunkt zeigt (z. B. `https://api.samueltim.com`).
+
+1. Kopiere `.env.example` nach `.env` oder `.env.production` und passe den Wert an.
+2. Stelle sicher, dass beim Docker-Build (bzw. CI/CD) die Variable gesetzt wird, z. B.
+
+```bash
+docker build --build-arg VITE_BACKEND_URL=https://api.samueltim.com .
+```
+
+Für lokale Entwicklung kann `VITE_BACKEND_URL=http://127.0.0.1:8000` genutzt werden.
+
 ## 🚀 Deployment
 
 ### Deploy to Vercel

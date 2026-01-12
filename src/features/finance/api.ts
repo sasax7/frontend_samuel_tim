@@ -15,9 +15,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function getApiBaseUrl(): string {
-  // Prefer explicit backend URL; fallback to localhost for local dev.
   const env = (import.meta as unknown as { env?: Record<string, string | undefined> }).env;
-  return env?.VITE_BACKEND_URL ?? "http://127.0.0.1:8000";
+  const configured = env?.VITE_BACKEND_URL?.trim();
+  if (configured) return configured.replace(/\/$/, "");
+
+  if (typeof window !== "undefined") {
+    const { hostname } = window.location;
+    const isLocal = ["localhost", "127.0.0.1"].includes(hostname);
+    if (isLocal) return "http://127.0.0.1:8000";
+    throw new Error(
+      "VITE_BACKEND_URL ist nicht gesetzt. Bitte die Backend-URL (z. B. https://api.example.com) in der Build-Umgebung konfigurieren."
+    );
+  }
+
+  return "http://127.0.0.1:8000";
 }
 
 async function readJsonOrText(res: Response): Promise<unknown> {

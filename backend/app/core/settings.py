@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     jwt_access_ttl_minutes: int = 60 * 24 * 7  # 7 days
 
     # CORS (comma-separated list in env)
-    cors_allow_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    cors_allow_origins: str = "http://localhost:5173,http://127.0.0.1:5173,https://localhost:5173,https://127.0.0.1:5173,https://api.samueltim.com,https://samueltim.com"
 
 
 settings = Settings()

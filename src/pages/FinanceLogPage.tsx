@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Expense, FinanceCategory, Income, NetWorthSnapshot, NetWorthSnapshotV2, YearMonth } from "@/features/finance/types";
 import { getActiveFinanceStore } from "@/features/finance/activeStore";
+import { getAccessToken } from "@/features/auth/session";
 import type { FinanceStoreData } from "@/features/finance/store";
 import { uid } from "@/features/finance/id";
 import { QuickBillEntry } from "@/components/finance/QuickBillEntry";
@@ -75,7 +76,8 @@ function upsertNetWorthSnapshotInMemory(
 }
 
 export default function FinanceLogPage() {
-  const store = getActiveFinanceStore();
+  const token = getAccessToken();
+  const store = useMemo(() => getActiveFinanceStore(), [token]);
   const [data, setData] = useState<Awaited<ReturnType<typeof store.get>> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedMonth] = useState<YearMonth>(() => toYearMonth(new Date()));

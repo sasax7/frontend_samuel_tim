@@ -9,6 +9,8 @@ RUN npm ci
 
 # Source Code kopieren und bauen
 COPY . .
+ARG VITE_BACKEND_URL
+ENV VITE_BACKEND_URL=${VITE_BACKEND_URL}
 RUN npm run build
 
 # Stage 2: Runtime (Nginx)
