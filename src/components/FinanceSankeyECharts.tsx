@@ -40,16 +40,22 @@ export function FinanceSankeyECharts({
   const hasData = data.links.length > 0 && data.nodes.length > 1;
 
   const nodeTotals = (() => {
-    const totals = new Map<string, number>();
-    for (const n of data.nodes) totals.set(n.name, 0);
+    const totals = new Map<string, { incoming: number; outgoing: number }>();
+    for (const n of data.nodes) totals.set(n.name, { incoming: 0, outgoing: 0 });
 
-    // For node labels, show the larger of incoming vs outgoing flow.
     for (const l of data.links) {
       const s = data.nodes[l.source]?.name;
       const t = data.nodes[l.target]?.name;
-      if (s) totals.set(s, Math.max(totals.get(s) ?? 0, l.value));
-      if (t) totals.set(t, Math.max(totals.get(t) ?? 0, l.value));
+      if (s) {
+        const prev = totals.get(s) ?? { incoming: 0, outgoing: 0 };
+        totals.set(s, { ...prev, outgoing: prev.outgoing + l.value });
+      }
+      if (t) {
+        const prev = totals.get(t) ?? { incoming: 0, outgoing: 0 };
+        totals.set(t, { ...prev, incoming: prev.incoming + l.value });
+      }
     }
+
     return totals;
   })();
 
@@ -88,8 +94,8 @@ export function FinanceSankeyECharts({
       {
         type: "sankey",
         // Reserve extra space on the right so labels on the last column don't get clipped.
-        left: 8,
-        right: 120,
+        left: 12,
+        right: 160,
         top: 8,
         bottom: 8,
         emphasis: { focus: "adjacency" },
@@ -108,8 +114,9 @@ export function FinanceSankeyECharts({
             opacity: clamp(0.55, 0.1, 0.95),
           },
         })),
-        nodeWidth: 14,
-        nodeGap: 18,
+        nodeWidth: 20,
+        nodeGap: 22,
+        nodeAlign: "left",
         draggable: false,
         lineStyle: {
           curveness: 0.5,
@@ -128,8 +135,10 @@ export function FinanceSankeyECharts({
           formatter: (params: unknown) => {
             const p = params as { name?: string };
             const name = p?.name ?? "";
-            const total = nodeTotals.get(name) ?? 0;
-            return total > 0 ? `${name}  ${formatEUR(total)}` : name;
+            const totals = nodeTotals.get(name);
+            if (!totals) return name;
+            const maxFlow = Math.max(totals.incoming, totals.outgoing);
+            return maxFlow > 0 ? `${name}  ${formatEUR(maxFlow)}` : name;
           },
         },
       },
