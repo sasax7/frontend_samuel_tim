@@ -282,28 +282,34 @@ export default function FinanceVizPage() {
     const balance = income - spendingTotal;
     const balanceNodeName = balance >= 0 ? "Unter Budget" : "Über Budget";
     const balanceNodeColor = balance >= 0 ? "#22c55e" : "#ef4444";
+    // Ignore categories without flow so ECharts doesn't render phantom nodes that overlap "Einnahmen".
+    const activeCategoryIds = new Set(spendingByCategory.filter((x) => x.total > 0).map((x) => x.categoryId));
+    const nodeIndexByCategoryId = new Map<string, number>();
 
     const nodes = [
       { name: "Einnahmen", color: "#16a34a" },
-      ...data.categories.map((c) => ({ name: c.name, color: c.color ?? "#94a3b8" })),
+      ...data.categories
+        .filter((c) => activeCategoryIds.has(c.id))
+        .map((c, idx) => {
+          nodeIndexByCategoryId.set(c.id, idx + 1);
+          return { name: c.name, color: c.color ?? "#94a3b8" };
+        }),
       { name: balanceNodeName, color: balanceNodeColor },
     ];
 
     const links = spendingByCategory
       .filter((x) => x.total > 0)
       .map((x) => {
-        const catName = categoriesById.get(x.categoryId)?.name ?? "Unbekannt";
-        const targetIndex = nodes.findIndex((n) => n.name === catName);
+        const targetIndex = nodeIndexByCategoryId.get(x.categoryId);
+        if (targetIndex === undefined) return null;
         const color = categoriesById.get(x.categoryId)?.color ?? "#94a3b8";
-        const value = x.total;
-        return { source: 0, target: targetIndex === -1 ? 0 : targetIndex, value, color };
+        return { source: 0, target: targetIndex, value: x.total, color };
       })
-      .filter((l) => l.target !== 0)
-      .filter((l) => l.value > 0);
+      .filter((l): l is { source: number; target: number; value: number; color: string } => Boolean(l));
 
     const balanceAbs = Math.abs(balance);
-    const balanceIndex = nodes.findIndex((n) => n.name === balanceNodeName);
-    if (balanceAbs > 0.0001 && balanceIndex > 0) {
+    const balanceIndex = nodes.length - 1;
+    if (balanceAbs > 0.0001) {
       links.push({ source: 0, target: balanceIndex, value: balanceAbs, color: balanceNodeColor });
     }
 
@@ -316,28 +322,33 @@ export default function FinanceVizPage() {
     const balance = income - spendingTotalYear;
     const balanceNodeName = balance >= 0 ? "Unter Budget" : "Über Budget";
     const balanceNodeColor = balance >= 0 ? "#22c55e" : "#ef4444";
+    const activeCategoryIds = new Set(spendingByCategoryYear.filter((x) => x.total > 0).map((x) => x.categoryId));
+    const nodeIndexByCategoryId = new Map<string, number>();
 
     const nodes = [
       { name: "Einnahmen", color: "#16a34a" },
-      ...data.categories.map((c) => ({ name: c.name, color: c.color ?? "#94a3b8" })),
+      ...data.categories
+        .filter((c) => activeCategoryIds.has(c.id))
+        .map((c, idx) => {
+          nodeIndexByCategoryId.set(c.id, idx + 1);
+          return { name: c.name, color: c.color ?? "#94a3b8" };
+        }),
       { name: balanceNodeName, color: balanceNodeColor },
     ];
 
     const links = spendingByCategoryYear
       .filter((x) => x.total > 0)
       .map((x) => {
-        const catName = categoriesById.get(x.categoryId)?.name ?? "Unbekannt";
-        const targetIndex = nodes.findIndex((n) => n.name === catName);
+        const targetIndex = nodeIndexByCategoryId.get(x.categoryId);
+        if (targetIndex === undefined) return null;
         const color = categoriesById.get(x.categoryId)?.color ?? "#94a3b8";
-        const value = x.total;
-        return { source: 0, target: targetIndex === -1 ? 0 : targetIndex, value, color };
+        return { source: 0, target: targetIndex, value: x.total, color };
       })
-      .filter((l) => l.target !== 0)
-      .filter((l) => l.value > 0);
+      .filter((l): l is { source: number; target: number; value: number; color: string } => Boolean(l));
 
     const balanceAbs = Math.abs(balance);
-    const balanceIndex = nodes.findIndex((n) => n.name === balanceNodeName);
-    if (balanceAbs > 0.0001 && balanceIndex > 0) {
+    const balanceIndex = nodes.length - 1;
+    if (balanceAbs > 0.0001) {
       links.push({ source: 0, target: balanceIndex, value: balanceAbs, color: balanceNodeColor });
     }
 
