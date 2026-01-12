@@ -18,6 +18,9 @@ export const content = {
       { label: "Home", href: "/" },
       { label: "About", href: "/#about" },
       { label: "Anomaly Detection", href: "/anomaly-detection" },
+      { label: "Login", href: "/login" },
+      { label: "Finanzen – Logging", href: "/finance/log" },
+      { label: "Finanzen – Visualisierung", href: "/finance/viz" },
     ],
   },
 

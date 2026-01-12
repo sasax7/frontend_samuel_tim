@@ -1,5 +1,7 @@
 import { useCallback } from "react";
 import { content } from "../content";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function AnomalyDetection() {
   const pdfUrl = content.anomalyDetection.pdfUrl;
@@ -45,53 +47,50 @@ export default function AnomalyDetection() {
             </ul>
 
             <div className="mt-10 flex flex-wrap gap-4">
-              <a
-                href="#pdf-preview"
-                className="px-8 py-4 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600 transition-all transform hover:scale-105 shadow-lg"
-              >
-                View PDF
-              </a>
-              <button
+              <Button asChild size="lg" className="shadow-lg">
+                <a href="#pdf-preview">View PDF</a>
+              </Button>
+
+              <Button
                 type="button"
+                variant="outline"
+                size="lg"
                 onClick={handleDownload}
-                className="px-8 py-4 rounded-lg font-semibold border-2 border-blue-600 text-blue-600 bg-white hover:bg-blue-50 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600 transition-all transform hover:scale-105 shadow-lg"
+                className="shadow-lg"
               >
                 Download PDF
-              </button>
-              <a
-                href={pdfUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-8 py-4 rounded-lg font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-600 transition-all"
-              >
-                Open in New Tab
-              </a>
+              </Button>
+
+              <Button asChild variant="secondary" size="lg">
+                <a href={pdfUrl} target="_blank" rel="noopener noreferrer">
+                  Open in New Tab
+                </a>
+              </Button>
             </div>
           </div>
 
-          <div
-            id="pdf-preview"
-            className="bg-white rounded-3xl shadow-2xl p-4 scroll-mt-24"
-          >
-            <iframe
-              src={pdfEmbedUrl}
-              title="Bachelor thesis PDF preview"
-              className="w-full h-[720px] rounded-2xl"
-            />
+          <Card id="pdf-preview" className="scroll-mt-24 shadow-2xl">
+            <CardContent className="p-4">
+              <iframe
+                src={pdfEmbedUrl}
+                title="Bachelor thesis PDF preview"
+                className="w-full h-[720px] rounded-2xl"
+              />
 
-            <p className="text-gray-600 mt-4">
-              If the PDF preview is blocked by your browser, use{" "}
-              <a
-                href={pdfUrl}
-                className="text-primary underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open in New Tab
-              </a>
-              .
-            </p>
-          </div>
+              <p className="text-gray-600 mt-4">
+                If the PDF preview is blocked by your browser, use{" "}
+                <a
+                  href={pdfUrl}
+                  className="text-primary underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open in New Tab
+                </a>
+                .
+              </p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </section>
