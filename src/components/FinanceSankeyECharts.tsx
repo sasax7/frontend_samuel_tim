@@ -84,8 +84,10 @@ export function FinanceSankeyECharts({
         }
         if (p?.dataType === "node") {
           const name = p.name ?? "";
-          const total = nodeTotals.get(name) ?? 0;
-          return total > 0 ? `${name}<br/>${formatEUR(total)}` : name;
+          const totals = nodeTotals.get(name);
+          if (!totals) return name;
+          const maxFlow = Math.max(totals.incoming, totals.outgoing);
+          return maxFlow > 0 ? `${name}<br/>${formatEUR(maxFlow)}` : name;
         }
         return "";
       },
