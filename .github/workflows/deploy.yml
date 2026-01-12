@@ -51,15 +51,19 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             export KUBECONFIG=/home/sti/.kube/config
+            
+            # Variablen definieren
             FRONTEND_IMAGE="${{ secrets.DOCKER_USERNAME }}/samueltim-portfolio:latest"
             BACKEND_IMAGE="${{ secrets.DOCKER_USERNAME }}/quantraider-backend:latest"
-
-            # Frontend aktualisieren
-            kubectl set image deployment/samueltim-frontend samueltim-frontend=$FRONTEND_IMAGE -n tradingapp
+            
+            # Frontend: Container heißt laut deiner Abfrage 'samueltim-portfolio'
+            kubectl set image deployment/samueltim-frontend samueltim-portfolio=$FRONTEND_IMAGE -n tradingapp
             kubectl rollout restart deployment/samueltim-frontend -n tradingapp
-            kubectl rollout status deployment/samueltim-frontend -n tradingapp
-
-            # Backend aktualisieren
-            kubectl set image deployment/samueltim-backend samueltim-backend=$BACKEND_IMAGE -n tradingapp
+            
+            # Backend: Laut 'kubectl describe' heißt der Container dort 'backend'
+            kubectl set image deployment/samueltim-backend backend=$BACKEND_IMAGE -n tradingapp
             kubectl rollout restart deployment/samueltim-backend -n tradingapp
+            
+            # Status prüfen
+            kubectl rollout status deployment/samueltim-frontend -n tradingapp
             kubectl rollout status deployment/samueltim-backend -n tradingapp
