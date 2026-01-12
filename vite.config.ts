@@ -34,6 +34,7 @@ export default defineConfig({
         ],
       },
       workbox: {
+        maximumFileSizeToCacheInBytes: 15 * 1024 * 1024, // allow precache of ~15MB PDFs
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,pdf}'],
         runtimeCaching: [
           {
