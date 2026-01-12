@@ -8,6 +8,7 @@ import type {
   YearMonth,
 } from "@/features/finance/types";
 import { getActiveFinanceStore } from "@/features/finance/activeStore";
+import { getAccessToken } from "@/features/auth/session";
 import { FinanceSankeyECharts } from "@/components/FinanceSankeyECharts";
 import { FinanceNetWorthStackedECharts } from "@/components/FinanceNetWorthStackedECharts";
 import { formatMoney } from "@/components/finance/financeFormat";
@@ -48,7 +49,8 @@ function dateForMonthDueDay(month: YearMonth, dueDay: number): `${number}-${numb
 }
 
 export default function FinanceVizPage() {
-  const store = getActiveFinanceStore();
+  const token = getAccessToken();
+  const store = useMemo(() => getActiveFinanceStore(token ?? undefined), [token]);
   const [data, setData] = useState<Awaited<ReturnType<typeof store.get>> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const selectedMonth = useMemo<YearMonth>(() => toYearMonth(new Date()), []);
@@ -75,7 +77,7 @@ export default function FinanceVizPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [store]);
 
   const currency = data?.currency ?? "EUR";
 

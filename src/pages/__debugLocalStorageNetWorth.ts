@@ -34,6 +34,5 @@ export async function debugNetWorthWriteRead() {
   const after = await store.get();
   const written = after.netWorth.find((s) => s.month === month);
 
-  // eslint-disable-next-line no-console
   console.log("[debugNetWorthWriteRead] month=", month, "written=", written);
 }

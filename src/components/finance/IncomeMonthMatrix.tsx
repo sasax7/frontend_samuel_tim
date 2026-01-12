@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/components/finance/financeFormat";
 import type { Income, ISODate, YearMonth } from "@/features/finance/types";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 type IncomeRowKey = string;
 
@@ -94,21 +94,14 @@ export function IncomeMonthMatrix({
   // Local text buffers so users can type freely (e.g. "12," as an intermediate state).
   const [cellText, setCellText] = useState<Record<string, string>>({});
 
-  useEffect(() => {
+  function clearCellText(key: string) {
     setCellText((prev) => {
+      if (!(key in prev)) return prev;
       const next = { ...prev };
-      for (const name of rowNames) {
-        for (const m of months) {
-          const id = `${keyForName(name)}::${m}`;
-          if (next[id] !== undefined) continue;
-          const raw = amountByNameMonth.get(id);
-          next[id] = typeof raw === "number" && raw !== 0 ? formatForEditing(raw) : "";
-        }
-      }
+      delete next[key];
       return next;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [months.join("|"), rowNames.join("|"), incomes.length]);
+  }
 
   const colTotals = useMemo(() => {
     return months.map((m) => {
@@ -190,7 +183,8 @@ export function IncomeMonthMatrix({
 
                     {months.map((m) => {
                       const id = `${rowKey}::${m}`;
-                      const display = cellText[id] ?? "";
+                      const raw = amountByNameMonth.get(id);
+                      const display = cellText[id] ?? (typeof raw === "number" && raw !== 0 ? formatForEditing(raw) : "");
 
                       return (
                         <td key={m} className="px-2 py-2 text-right">
@@ -202,16 +196,17 @@ export function IncomeMonthMatrix({
                               const v = e.target.value;
                               setCellText((prev) => ({ ...prev, [id]: v }));
                             }}
-                            onBlur={() => {
-                              const v = (cellText[id] ?? "").trim();
+                            onBlur={(e) => {
+                              const v = e.currentTarget.value.trim();
                               if (v === "") {
                                 onUpdateCell({ name, month: m, amount: null });
-                                return;
+                              } else {
+                                const parsed = parseLocaleNumber(v);
+                                if (parsed !== null) {
+                                  onUpdateCell({ name, month: m, amount: parsed });
+                                }
                               }
-                              const parsed = parseLocaleNumber(v);
-                              if (parsed !== null) {
-                                onUpdateCell({ name, month: m, amount: parsed });
-                              }
+                              clearCellText(id);
                             }}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {

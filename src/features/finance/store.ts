@@ -148,7 +148,6 @@ export function createLocalFinanceStore(storageKey = "finance:data"): FinanceSto
     try {
       return localStorage.getItem(key);
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn("[finance] localStorage.getItem failed; using in-memory fallback.", e);
       return memoryFallback;
     }
@@ -160,7 +159,6 @@ export function createLocalFinanceStore(storageKey = "finance:data"): FinanceSto
       // keep memory in sync too
       memoryFallback = value;
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.warn("[finance] localStorage.setItem failed; using in-memory fallback (NOT persisted across reload).", e);
       memoryFallback = value;
     }

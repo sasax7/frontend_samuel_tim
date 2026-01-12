@@ -2,21 +2,45 @@ import type { FinanceStore, FinanceStoreData } from "./store";
 import { createLocalFinanceStore, createDefaultFinanceData } from "./store";
 import { apiGetMyFinance, apiPutMyFinance } from "./api";
 import { getAccessToken } from "@/features/auth/session";
+import { readCachedFinance, writeCachedFinance, writePendingFinance, syncPendingFinance, registerOnlineSync } from "./offlineSync";
 
 const localStore = createLocalFinanceStore();
 
 function createBackendFinanceStore(token: string): FinanceStore {
+  registerOnlineSync(token);
+
   async function get(): Promise<FinanceStoreData> {
-    // Backend returns whatever is stored. If empty, we initialize defaults client-side.
-    const data = await apiGetMyFinance(token);
-    if (!data || !data.version) {
-      return createDefaultFinanceData();
+    try {
+      // attempt to flush pending first; ignore failure here (will retry online event)
+      await syncPendingFinance(token);
+
+      const data = await apiGetMyFinance(token);
+      if (!data || !data.version) {
+        const fallback = createDefaultFinanceData();
+        writeCachedFinance(fallback);
+        return fallback;
+      }
+      writeCachedFinance(data);
+      writePendingFinance(null);
+      return data;
+    } catch (e) {
+      console.warn("[finance] falling back to cached finance data", e);
+      const cached = readCachedFinance();
+      return cached ?? createDefaultFinanceData();
     }
-    return data;
   }
 
   async function set(next: FinanceStoreData): Promise<void> {
-    await apiPutMyFinance(token, next);
+    try {
+      await apiPutMyFinance(token, next);
+      writeCachedFinance(next);
+      writePendingFinance(null);
+    } catch (e) {
+      // optimistic: cache locally + queue for retry
+      writeCachedFinance(next);
+      writePendingFinance(next);
+      console.warn("[finance] queued finance changes for retry", e);
+    }
   }
 
   // We can reuse the same convenience helpers by reading/mutating/writing.
@@ -67,8 +91,8 @@ function createBackendFinanceStore(token: string): FinanceStore {
   };
 }
 
-export function getActiveFinanceStore(): FinanceStore {
-  const token = getAccessToken();
+export function getActiveFinanceStore(explicitToken?: string): FinanceStore {
+  const token = explicitToken ?? getAccessToken();
   if (!token) return localStore;
   return createBackendFinanceStore(token);
 }

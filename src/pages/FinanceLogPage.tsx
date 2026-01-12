@@ -77,7 +77,7 @@ function upsertNetWorthSnapshotInMemory(
 
 export default function FinanceLogPage() {
   const token = getAccessToken();
-  const store = useMemo(() => getActiveFinanceStore(), [token]);
+  const store = useMemo(() => getActiveFinanceStore(token ?? undefined), [token]);
   const [data, setData] = useState<Awaited<ReturnType<typeof store.get>> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedMonth] = useState<YearMonth>(() => toYearMonth(new Date()));
@@ -125,7 +125,7 @@ export default function FinanceLogPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [store]);
 
   async function refresh() {
     const d = await store.get();

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { FinanceCategory, RecurringBill, YearMonth } from "@/features/finance/types";
 
 function monthToNumber(m: YearMonth): number {
@@ -85,7 +85,7 @@ export function RecurringBillsManager({
   onAddChange: (b: RecurringBill) => void;
   onDeleteChange: (b: RecurringBill, effectiveMonth: YearMonth) => void;
 }) {
-  const months = getLast12Months(billStartMonth);
+  const months = useMemo(() => getLast12Months(billStartMonth), [billStartMonth]);
 
   const sortedBills = useMemo(
     () => bills.slice().sort((a, b) => a.name.localeCompare(b.name)),
@@ -95,21 +95,14 @@ export function RecurringBillsManager({
   // Local text buffers per cell so users can type intermediate states ("12,", "12.").
   const [cellText, setCellText] = useState<Record<string, string>>({});
 
-  useEffect(() => {
+  function clearCellText(key: string) {
     setCellText((prev) => {
+      if (!(key in prev)) return prev;
       const next = { ...prev };
-      for (const b of sortedBills) {
-        for (const m of months) {
-          const id = `${b.id}::${m}`;
-          if (next[id] !== undefined) continue;
-          const v = amountForMonth(b, m);
-          next[id] = typeof v === "number" ? formatForEditing(v) : "";
-        }
-      }
+      delete next[key];
       return next;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [months.join("|"), sortedBills.map((b) => b.id).join("|"), billStartMonth]);
+  }
 
   // We use a simple strategy:
   // - Editing a cell creates/overwrites an amountHistory entry effective at that month.
@@ -187,7 +180,10 @@ export function RecurringBillsManager({
                               }
                               value={cellText[id] ?? (typeof v === "number" ? formatForEditing(v) : "")}
                               onChange={(e) => setCellText((prev) => ({ ...prev, [id]: e.target.value }))}
-                              onBlur={() => onCommitCell(b, m, cellText[id] ?? "")}
+                              onBlur={(e) => {
+                                onCommitCell(b, m, e.currentTarget.value);
+                                clearCellText(id);
+                              }}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter") {
                                   (e.currentTarget as HTMLInputElement).blur();

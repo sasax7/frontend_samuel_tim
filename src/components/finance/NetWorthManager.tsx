@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { NetWorthSnapshotV2, YearMonth } from "@/features/finance/types";
 import { formatMoney } from "@/components/finance/financeFormat";
 
@@ -77,7 +77,7 @@ export function NetWorthManager({
     amount: number | null;
   }) => void;
 }) {
-  const months = getLast12Months(snapshotMonth);
+  const months = useMemo(() => getLast12Months(snapshotMonth), [snapshotMonth]);
 
   // Row model is the union of all accounts present across the last 12 months.
   const accounts = useMemo(() => {
@@ -121,23 +121,14 @@ export function NetWorthManager({
   // Local text buffers so users can type freely (e.g. "12," as an intermediate state).
   const [cellText, setCellText] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    // When underlying data changes (or month window changes), seed missing buffers.
+  function clearCellText(key: string) {
     setCellText((prev) => {
+      if (!(key in prev)) return prev;
       const next = { ...prev };
-      for (const a of accounts) {
-        const rowKey = accountKey(a.groupId, a.name);
-        for (const m of months) {
-          const id = `${m}::${rowKey}`;
-          if (next[id] !== undefined) continue;
-          const raw = valueByMonthGroupAccount.get(id);
-          next[id] = typeof raw === "number" ? formatForEditing(raw) : "";
-        }
-      }
+      delete next[key];
       return next;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [months.join("|"), accounts.map((a) => `${a.groupId}:${a.name}`).join("|"), snapshotMonth, snapshot]);
+  }
 
   const colTotals = useMemo(() => {
     return months.map((m) => {
@@ -238,7 +229,8 @@ export function NetWorthManager({
 
                     {months.map((m) => {
                       const key = `${m}::${rowKey}`;
-                      const display = cellText[key] ?? "";
+                      const raw = valueByMonthGroupAccount.get(key);
+                      const display = cellText[key] ?? (typeof raw === "number" ? formatForEditing(raw) : "");
 
                       return (
                         <td key={m} className="px-2 py-2 text-right">
@@ -250,8 +242,8 @@ export function NetWorthManager({
                               const v = e.target.value;
                               setCellText((prev) => ({ ...prev, [key]: v }));
                             }}
-                            onBlur={() => {
-                              const v = (cellText[key] ?? "").trim();
+                            onBlur={(e) => {
+                              const v = e.currentTarget.value.trim();
                               if (v === "") {
                                 onUpdateCell({
                                   month: m,
@@ -260,18 +252,19 @@ export function NetWorthManager({
                                   accountName: a.name,
                                   amount: null,
                                 });
-                                return;
+                              } else {
+                                const parsed = parseLocaleNumber(v);
+                                if (parsed !== null) {
+                                  onUpdateCell({
+                                    month: m,
+                                    groupId: a.groupId,
+                                    groupName: a.groupName,
+                                    accountName: a.name,
+                                    amount: parsed,
+                                  });
+                                }
                               }
-                              const parsed = parseLocaleNumber(v);
-                              if (parsed !== null) {
-                                onUpdateCell({
-                                  month: m,
-                                  groupId: a.groupId,
-                                  groupName: a.groupName,
-                                  accountName: a.name,
-                                  amount: parsed,
-                                });
-                              }
+                              clearCellText(key);
                             }}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {

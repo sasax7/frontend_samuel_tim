@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { formatMoney } from "@/components/finance/financeFormat";
 import type { Income, ISODate } from "@/features/finance/types";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 function parseLocaleNumber(input: string): number | null {
   const normalized = input.replace(/\s+/g, "").replace(/,/g, ".");
@@ -45,29 +45,21 @@ export function IncomeGrid({
   // Per-cell buffers so users can type intermediates like "12,".
   const [cellText, setCellText] = useState<Record<string, string>>({});
 
-  useEffect(() => {
+  const clearCellText = useCallback((key: string) => {
     setCellText((prev) => {
+      if (!(key in prev)) return prev;
       const next = { ...prev };
-      for (const r of sorted) {
-        const key = r.id;
-        if (next[`name::${key}`] === undefined) next[`name::${key}`] = r.name ?? "";
-        if (next[`date::${key}`] === undefined) next[`date::${key}`] = r.date ?? "";
-        if (next[`amount::${key}`] === undefined) next[`amount::${key}`] = formatForEditing(r.amount.amount);
-      }
+      delete next[key];
       return next;
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sorted.map((r) => `${r.id}:${r.date}:${r.name}:${r.amount.amount}`).join("|")]);
+  }, []);
 
   const commit = useCallback(
-    (row: Income, field: "name" | "date" | "amount") => {
-      const id = row.id;
-      const name = (cellText[`name::${id}`] ?? "").trim();
-      const date = (cellText[`date::${id}`] ?? "").trim();
-      const amountText = (cellText[`amount::${id}`] ?? "").trim();
+    (row: Income, field: "name" | "date" | "amount", rawValue?: string) => {
+      const value = (rawValue ?? "").trim();
 
       if (field === "amount") {
-        const parsed = parseLocaleNumber(amountText);
+        const parsed = parseLocaleNumber(value);
         if (parsed === null) return;
         if (parsed !== row.amount.amount) {
           onUpsert({ ...row, amount: { ...row.amount, amount: parsed } });
@@ -76,17 +68,17 @@ export function IncomeGrid({
       }
 
       if (field === "name") {
-        if (name !== row.name) onUpsert({ ...row, name });
+        if (value !== (row.name ?? "")) onUpsert({ ...row, name: value });
         return;
       }
 
       if (field === "date") {
         // Keep existing date if input is invalid/empty.
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
-        if (date !== row.date) onUpsert({ ...row, date: date as ISODate });
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return;
+        if (value !== row.date) onUpsert({ ...row, date: value as ISODate });
       }
     },
-    [cellText, onUpsert]
+    [onUpsert]
   );
 
   const [newName, setNewName] = useState<string>("");
@@ -192,7 +184,10 @@ export function IncomeGrid({
                       className="w-full rounded-md border px-2 py-1"
                       value={cellText[`date::${r.id}`] ?? r.date}
                       onChange={(e) => setCellText((prev) => ({ ...prev, [`date::${r.id}`]: e.target.value }))}
-                      onBlur={() => commit(r, "date")}
+                      onBlur={(e) => {
+                        commit(r, "date", e.currentTarget.value);
+                        clearCellText(`date::${r.id}`);
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
                       }}
@@ -203,7 +198,10 @@ export function IncomeGrid({
                       className="w-full rounded-md border px-2 py-1"
                       value={cellText[`name::${r.id}`] ?? r.name}
                       onChange={(e) => setCellText((prev) => ({ ...prev, [`name::${r.id}`]: e.target.value }))}
-                      onBlur={() => commit(r, "name")}
+                      onBlur={(e) => {
+                        commit(r, "name", e.currentTarget.value);
+                        clearCellText(`name::${r.id}`);
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
                       }}
@@ -217,7 +215,10 @@ export function IncomeGrid({
                       onChange={(e) =>
                         setCellText((prev) => ({ ...prev, [`amount::${r.id}`]: e.target.value }))
                       }
-                      onBlur={() => commit(r, "amount")}
+                      onBlur={(e) => {
+                        commit(r, "amount", e.currentTarget.value);
+                        clearCellText(`amount::${r.id}`);
+                      }}
                       onKeyDown={(e) => {
                         if (e.key === "Enter") (e.currentTarget as HTMLInputElement).blur();
                       }}
